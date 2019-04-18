@@ -1,0 +1,22 @@
+sudo: required
+services: 
+  - docker
+
+before_install:
+  - docker build -t savage/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run savage/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t savage/multi-client ./client
+  - docker build -t savage/multi-nginx  ./nginx
+  - docker build -t savage/multi-server ./server
+  - docker build -t savage/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to docker hub
+  - docker push savage/multi-client
+  - docker push savage/multi-nginx
+  - docker push savage/multi-server
+  - docker push savage/multi-worker
